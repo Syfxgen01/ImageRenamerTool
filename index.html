@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image File Renamer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .settings {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .example {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            background: #f8f9fa;
+            margin-bottom: 30px;
+        }
+
+        .upload-area:hover {
+            background: #e9ecef;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-list {
+            margin-top: 30px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+
+        .file-item:hover {
+            background: #e9ecef;
+        }
+
+        .old-name {
+            color: #666;
+            text-decoration: line-through;
+            font-size: 0.9em;
+        }
+
+        .new-name {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 1em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .instructions {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .instructions strong {
+            color: #856404;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Image File Renamer</h1>
+        <p class="subtitle">Rename multiple image files instantly with custom patterns</p>
+
+        <div class="settings">
+            <div class="form-group">
+                <label for="prefix">Prefix (optional)</label>
+                <input type="text" id="prefix" placeholder="e.g., product, ts, photo" value="product">
+            </div>
+
+            <div class="form-group">
+                <label for="separator">Separator</label>
+                <select id="separator">
+                    <option value="-">Dash (-)</option>
+                    <option value="_">Underscore (_)</option>
+                    <option value="">None</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="startNumber">Start Number</label>
+                <input type="number" id="startNumber" value="1" min="1">
+            </div>
+
+            <div class="form-group">
+                <label for="digits">Number of Digits (padding)</label>
+                <select id="digits">
+                    <option value="1">1 (1, 2, 3...)</option>
+                    <option value="2">2 (01, 02, 03...)</option>
+                    <option value="3" selected>3 (001, 002, 003...)</option>
+                    <option value="4">4 (0001, 0002, 0003...)</option>
+                </select>
+            </div>
+
+            <div class="example" id="example">
+                📝 Example: <strong>product-001.jpg, product-002.jpg, product-003.jpg</strong>
+            </div>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <h3>Click to select images or drag & drop here</h3>
+            <p style="margin-top: 10px; color: #666;">Supports: JPG, JPEG, PNG, GIF, WebP</p>
+            <input type="file" id="fileInput" multiple accept="image/*">
+        </div>
+
+        <div class="file-list" id="fileList"></div>
+
+        <button class="btn" id="downloadBtn" disabled>📥 Download Rename Script</button>
+
+        <div class="instructions">
+            <strong>📌 How to use:</strong><br>
+            1. Configure your naming pattern above<br>
+            2. Select or drag your image files<br>
+            3. Preview the new names<br>
+            4. Download the rename script for your OS<br>
+            5. Run the script in your images folder
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const example = document.getElementById('example');
+
+        let files = [];
+
+        // Update example when settings change
+        function updateExample() {
+            const prefix = document.getElementById('prefix').value;
+            const separator = document.getElementById('separator').value;
+            const startNum = parseInt(document.getElementById('startNumber').value);
+            const digits = parseInt(document.getElementById('digits').value);
+
+            const num1 = String(startNum).padStart(digits, '0');
+            const num2 = String(startNum + 1).padStart(digits, '0');
+            const num3 = String(startNum + 2).padStart(digits, '0');
+
+            const base = prefix ? prefix + separator : '';
+            example.innerHTML = `📝 Example: <strong>${base}${num1}.jpg, ${base}${num2}.jpg, ${base}${num3}.jpg</strong>`;
+            
+            if (files.length > 0) {
+                displayFiles();
+            }
+        }
+
+        document.getElementById('prefix').addEventListener('input', updateExample);
+        document.getElementById('separator').addEventListener('change', updateExample);
+        document.getElementById('startNumber').addEventListener('input', updateExample);
+        document.getElementById('digits').addEventListener('change', updateExample);
+
+        // Upload area click
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        // File selection
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(selectedFiles) {
+            files = Array.from(selectedFiles).filter(file => file.type.startsWith('image/'));
+            if (files.length > 0) {
+                displayFiles();
+                downloadBtn.disabled = false;
+            }
+        }
+
+        function displayFiles() {
+            const prefix = document.getElementById('prefix').value;
+            const separator = document.getElementById('separator').value;
+            const startNum = parseInt(document.getElementById('startNumber').value);
+            const digits = parseInt(document.getElementById('digits').value);
+
+            fileList.innerHTML = '<h3 style="margin-bottom: 15px;">Preview:</h3>';
+            
+            files.forEach((file, index) => {
+                const extension = file.name.split('.').pop();
+                const number = String(startNum + index).padStart(digits, '0');
+                const base = prefix ? prefix + separator : '';
+                const newName = `${base}${number}.${extension}`;
+
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    <div>
+                        <div class="old-name">${file.name}</div>
+                        <div class="new-name">→ ${newName}</div>
+                    </div>
+                `;
+                fileList.appendChild(item);
+            });
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            const prefix = document.getElementById('prefix').value;
+            const separator = document.getElementById('separator').value;
+            const startNum = parseInt(document.getElementById('startNumber').value);
+            const digits = parseInt(document.getElementById('digits').value);
+
+            // Generate PowerShell script
+            let script = `# Image Renaming Script - Generated by Total Spectrum Renamer\n`;
+            script += `# Place this script in the same folder as your images and run it\n\n`;
+            script += `$counter = ${startNum}\n`;
+            script += `Get-ChildItem * | Where-Object {$_.Extension -match '\\.(jpg|jpeg|png|gif|webp)$'} | Sort-Object Name | ForEach-Object {\n`;
+            script += `    $number = $counter.ToString().PadLeft(${digits}, '0')\n`;
+            script += `    $extension = $_.Extension\n`;
+            const base = prefix ? `"${prefix}${separator}"` : '""';
+            script += `    $newName = ${base} + $number + $extension\n`;
+            script += `    Rename-Item $_.Name -NewName $newName\n`;
+            script += `    Write-Host "Renamed: $($_.Name) -> $newName"\n`;
+            script += `    $counter++\n`;
+            script += `}\n`;
+            script += `Write-Host "\\nRenaming complete! Press any key to exit..."\n`;
+            script += `$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")\n`;
+
+            // Download the script
+            const blob = new Blob([script], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'rename-images.ps1';
+            a.click();
+            URL.revokeObjectURL(url);
+
+            alert('✅ Script downloaded!\n\nTo use:\n1. Copy the script to your images folder\n2. Right-click the file\n3. Select "Run with PowerShell"\n\n(On Mac/Linux, use Terminal with bash commands)');
+        });
+
+        updateExample();
+    </script>
+</body>
+</html>
